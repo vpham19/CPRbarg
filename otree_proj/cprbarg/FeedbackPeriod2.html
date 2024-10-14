@@ -1,0 +1,17 @@
+{% extends "global/Page.html" %}
+
+{% block title %}
+Period 2 Feedback
+{% endblock %}
+
+{% block content %}
+<h1>Feedback After Period 2</h1>
+
+<p>{{ message|safe }}</p>  <!-- Use 'safe' to render HTML tags like <br> -->
+
+<p><strong>Thank you for participating!</strong></p>
+
+<form method="post">
+    <input type="submit" value="Finish">
+</form>
+{% endblock %}
