@@ -1,0 +1,54 @@
+{% extends "global/Page.html" %}
+
+{% block title %}
+Period 1
+{% endblock %}
+
+{% block content %}
+<p>{{ total_resource }}</p>
+<p>Maximum extraction amount for each participant: {{ max_extraction }}</p>
+<p>{{ growth_rate }}</p>
+<p>{{ risk_info }}</p>
+
+<!-- Display validation errors if there are any -->
+{% if form.errors %}
+    <div class="alert alert-danger">
+        {{ form.errors }}
+    </div>
+{% endif %}
+
+<!-- Form to collect extractions and guesses from players -->
+<form method="post">
+
+    {% if player.id_in_group == 1 %}
+        <div>
+            <label for="extract_me_p1_t1">How much would you like to extract?</label>
+            <input type="number" name="extract_me_p1_t1" min="0" max="{{ max_extraction }}" value="{{ player.field_maybe_none('extract_me_p1_t1') }}">
+        <br>
+        </div>
+
+        <div>
+            <label for="guess_other_p1_t1">How much do you think the other participant will extract?</label>
+            <input type="number" name="guess_other_p1_t1" min="0" max="{{ max_extraction }}" value="{{ player.field_maybe_none('guess_other_p1_t1') }}">
+        <br>
+        </div>
+    {% elif player.id_in_group == 2 %}
+        <div>
+            <label for="extract_me_p2_t1">How much would you like to extract?</label>
+            <input type="number" name="extract_me_p2_t1" min="0" max="{{ max_extraction }}" value="{{ player.field_maybe_none('extract_me_p2_t1') }}">
+        </div>
+
+        <div>
+            <label for="guess_other_p2_t1">How much do you think the other participant will extract?</label>
+            <input type="number" name="guess_other_p2_t1" min="0" max="{{ max_extraction }}" value="{{ player.field_maybe_none('guess_other_p2_t1') }}">
+        </div>
+    {% endif %}
+
+    <br>
+
+    <!-- Submit button on a separate line -->
+    <div>
+        <input type="submit" value="Submit">
+    </div>
+</form>
+{% endblock %}
