@@ -1,3 +1,4 @@
+from collections import deque
 from otree.api import *
 import random
 
@@ -14,19 +15,36 @@ class C(BaseConstants):
 
 
 class Subsession(BaseSubsession):
-    def creating_session(self):
+    # Global variable to store pairs
+    global pairs
+
+    def creating_subsession(self):
+        # Store the current round number for each player
         for player in self.get_players():
             player.current_round = self.round_number
-        # Set the initial grouping for round 1
-        self.set_stranger_matching()
 
-    def set_stranger_matching(self):
-        """Shuffles players and assigns new groups each round."""
-        players = self.get_players()
-        random.shuffle(players)  # Randomly shuffle players for stranger matching
+        # Get pairs and rotate them to ensure variety in matching
+        if self.round_number == 1:
+            pairs = self.get_pairs()
 
-        group_matrix = [players[i:i + C.PLAYERS_PER_GROUP] for i in range(0, len(players), C.PLAYERS_PER_GROUP)]
-        self.set_group_matrix(group_matrix)
+        self.set_group_matrix(next(pairs))
+        print(f"Groups randomized in round {self.round_number}")
+
+        # Debug: Print group formation for each round
+        for group in self.get_groups():
+            players = group.get_players()
+            print(f"Group {group.id_in_subsession}: {[p.id_in_subsession for p in players]}")
+
+    def get_pairs(self):
+        nb_participants = len(self.get_players())
+        PLAYERS1 = [p.id_in_subsession for p in self.get_players()[: nb_participants // 2]]
+        PLAYERS2 = [p.id_in_subsession for p in self.get_players()[nb_participants // 2:]]
+        PLAYERS2 = deque(PLAYERS2)
+
+        # Use deque to rotate player pairs
+        while True:
+            yield list(zip(PLAYERS1, PLAYERS2))
+            PLAYERS2.rotate(1)
 
 
 class Group(BaseGroup):
@@ -97,11 +115,11 @@ class Period1WaitPage(WaitPage):
 
     @staticmethod
     def after_all_players_arrive(group: Group):
-            remaining_pie = C.PIE_SIZE_T1 - group.total_extraction_t1
-            if random.random() < C.RISK:
-                group.pie_size_t2 = 0  # Apply risk, pie becomes 0
-            else:
-                group.pie_size_t2 = remaining_pie * C.GROWTH_RATE
+        remaining_pie = C.PIE_SIZE_T1 - group.total_extraction_t1
+        if random.random() < C.RISK:
+            group.pie_size_t2 = 0  # Apply risk, pie becomes 0
+        else:
+            group.pie_size_t2 = remaining_pie * C.GROWTH_RATE
 
 
 class FeedbackPeriod1(Page):
@@ -191,20 +209,6 @@ class FeedbackPeriod2(Page):
 
 class BeforeNextRoundWaitPage(WaitPage):
     wait_for_all_groups = True
-
-    @staticmethod
-    def after_all_players_arrive(subsession: Subsession):
-        """Stranger matching and reset before each new round."""
-        # Shuffle and reassign players to new groups
-        subsession.set_stranger_matching()
-
-        # Reset conditions for each new round
-        for group in subsession.get_groups():
-            # Reset the pie size for the next round to the initial value
-            group.pie_size_t2 = C.PIE_SIZE_T1
-
-            # Reset the total extraction for Period 1
-            group.total_extraction_t1 = 0
 
 
 page_sequence = [
